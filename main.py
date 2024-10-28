@@ -3,16 +3,15 @@ from typing import Final
 
 import pdfplumber
 
-IDENTIFY_TRANSACTION_ROW_REGEX: Final[str] = (
-    r"(?P<date>\d{2} [A-Za-z]{3})"  # e.g. '21 Oct'
-    r"\s+"
-    r"(?P<text>.+?)"
-    r"\s+"
-    r"(?P<number1>\d{1,3}(?:,\d{3})*\.\d{2}(?:\s?Cr)?)"
-    r"\s+"
-    r"(?P<number2>\d{1,3}(?:,\d{3})*\.\d{2}(?:\s?Cr)?)"
-    r"\s+"
-    r"(?P<number3>\d{1,3}(?:,\d{3})*\.\d{2}(?:\s?Cr)?)?"
+REGEX_SHORT_DATE = r"^\s*(\d{2}\s+[A-Z][a-z]{2})"  # matches e.g. '24 Dec'
+REGEX_MONEY_NUM = r"\b[\d,]+\.\d{2}(?:Cr)?\b"  # matches e.g. "420.69" or "80,085.69Cr"
+IDENTIFY_TRANSACTION_ROW_REGEX = (
+    REGEX_SHORT_DATE
+    + r"(.*?(?!\.\d{2}(?:Cr)?\b))"  # anything not followed by cents amount
+    + rf"({REGEX_MONEY_NUM})"
+    + r"\s+"
+    + rf"({REGEX_MONEY_NUM})"
+    + rf"(?:\s+({REGEX_MONEY_NUM}))?\s*?$"  # optional 3rd amount
 )
 
 with pdfplumber.open("bank_statements/FNB_ASPIRE_CURRENT_ACCOUNT_100.pdf") as pdf:
@@ -20,7 +19,16 @@ with pdfplumber.open("bank_statements/FNB_ASPIRE_CURRENT_ACCOUNT_100.pdf") as pd
         page_text: str = page.extract_text()
         # break
         for row in page_text.split("\n"):
+            print(row)
             row_match = re.match(IDENTIFY_TRANSACTION_ROW_REGEX, row.strip())
             if row_match:
-                print(row_match.groups())
-        break
+                raw_date, raw_desc, raw_amt, raw_balance, raw_fee = row_match.groups()
+                print(
+                    " -- MATCH -- ",
+                    raw_date,
+                    raw_desc,
+                    raw_amt,
+                    raw_balance,
+                    raw_fee,
+                    sep=" :: ",
+                )
