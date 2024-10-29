@@ -38,6 +38,25 @@ MONTH_NAMES: Final[tuple[str, ...]] = (
     "Dec",
 )
 
+
+def clean_fnb_currency_string(raw_str: str) -> Decimal:
+    """Converts a raw currency amount string to a Decimal
+    representation
+
+    Examples:
+        >>> clean_fnb_currency_string(" 80,085.69Cr ")
+        Decimal('80085.69')
+        >>> clean_fnb_currency_string("420.69")
+        Decimal('-420.69')
+    """
+    clean_str = raw_str.replace(",", "").replace(" ", "")
+    if clean_str[-2:] == "Cr":
+        clean_str = clean_str.replace("Cr", "")
+    else:
+        clean_str = f"-{clean_str}"
+    return Decimal(clean_str)
+
+
 with pdfplumber.open("bank_statements/FNB_ASPIRE_CURRENT_ACCOUNT_100.pdf") as pdf:
     transactions_found: list[Transaction] = []
     balances_found: dict[str, Any] = {
