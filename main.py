@@ -1,3 +1,4 @@
+import datetime
 import re
 from collections import namedtuple
 from decimal import Decimal
@@ -74,12 +75,13 @@ with pdfplumber.open("bank_statements/FNB_ASPIRE_CURRENT_ACCOUNT_100.pdf") as pd
     for page in pdf.pages:
         page_text: str = page.extract_text()
         if current_year is None:
-            current_year = int(
-                re.search(
-                    r"Statement Period\s+:\s+\d{2}\s+[a-zA-Z]+\s+(\d{4})",
-                    page_text,
-                ).groups()[0]
-            )
+            # extract starting year and month from first page of statement #
+            current_month, current_year_raw = re.search(
+                r"Statement Period\s+:\s+\d{2}\s+([a-zA-Z]{3})[a-zA-Z]*\s+(\d{4})",
+                page_text,
+            ).groups()
+            current_year = int(current_year_raw)
+
         for row in page_text.split("\n"):
             for balance_name, balance_info in balances_found.items():
                 found_balance = re.search(balance_info["regex"], row)
@@ -98,15 +100,35 @@ with pdfplumber.open("bank_statements/FNB_ASPIRE_CURRENT_ACCOUNT_100.pdf") as pd
                 raw_day, raw_month, raw_desc, raw_amt, raw_balance, raw_fee = (
                     row_match.groups()
                 )
+                month: str = raw_month.strip()
+                if MONTH_NAMES.index(month) < MONTH_NAMES.index(current_month):
+                    # if month goes backward, we have crossed into a new year
+                    current_year += 1
+                current_month = month
+                transactions_found.append(
+                    Transaction(
+                        date=datetime.date(
+                            current_year, MONTH_NAMES.index(month) + 1, int(raw_day)
+                        ),
+                        description=raw_desc.strip(),
+                        amount=clean_fnb_currency_string(raw_amt),
+                        balance=clean_fnb_currency_string(raw_balance),
+                        bank_fee=(
+                            None
+                            if raw_fee is None
+                            else clean_fnb_currency_string(raw_fee)
+                        ),
+                    )
+                )
 
-            # parsed data validation #
-            for balance_name, balance_info in balances_found.items():
-                assert all(
-                    [
-                        bal == balance_info["values_found"][0]
-                        for bal in balance_info["values_found"]
-                    ]
-                ), f"Found conflicting values for {balance_name} balance: found values {';'.join([str(x) for x in balance_info['values_found']])}"
+    # parsed data validation #
+    for balance_name, balance_info in balances_found.items():
+        assert all(
+            [
+                bal == balance_info["values_found"][0]
+                for bal in balance_info["values_found"]
+            ]
+        ), f"Found conflicting values for {balance_name} balance: found values {';'.join([str(x) for x in balance_info['values_found']])}"
 
-            opening_balance: Decimal = balances_found["opening"]["values_found"][0]
-            closing_balance: Decimal = balances_found["closing"]["vaues_found"][0]
+    opening_balance: Decimal = balances_found["opening"]["values_found"][0]
+    closing_balance: Decimal = balances_found["closing"]["values_found"][0]
