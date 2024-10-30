@@ -24,6 +24,11 @@ Transaction = namedtuple(
     "transaction", ["date", "description", "amount", "balance", "bank_fee"]
 )
 
+
+class PdfParsingException(Exception):
+    pass
+
+
 MONTH_NAMES: Final[tuple[str, ...]] = (
     "Jan",
     "Feb",
@@ -40,7 +45,7 @@ MONTH_NAMES: Final[tuple[str, ...]] = (
 )
 
 
-def clean_fnb_currency_string(raw_str: str) -> Decimal:
+def clean_fnb_currency_string(raw_str: Optional[str]) -> Decimal:
     """Converts a raw currency amount string to a Decimal
     representation
 
@@ -50,6 +55,8 @@ def clean_fnb_currency_string(raw_str: str) -> Decimal:
         >>> clean_fnb_currency_string("420.69")
         Decimal('-420.69')
     """
+    if raw_str is None:
+        return Decimal("0.00")
     clean_str = raw_str.replace(",", "").replace(" ", "")
     if clean_str[-2:] == "Cr":
         clean_str = clean_str.replace("Cr", "")
@@ -105,30 +112,46 @@ with pdfplumber.open("bank_statements/FNB_ASPIRE_CURRENT_ACCOUNT_100.pdf") as pd
                     # if month goes backward, we have crossed into a new year
                     current_year += 1
                 current_month = month
+                transaction_desc: str = (
+                    "!ERROR: unparsable description text!"
+                    if raw_desc.strip() == ""
+                    else raw_desc.strip()
+                )
                 transactions_found.append(
                     Transaction(
                         date=datetime.date(
                             current_year, MONTH_NAMES.index(month) + 1, int(raw_day)
                         ),
-                        description=raw_desc.strip(),
+                        description=transaction_desc,
                         amount=clean_fnb_currency_string(raw_amt),
                         balance=clean_fnb_currency_string(raw_balance),
-                        bank_fee=(
-                            None
-                            if raw_fee is None
-                            else clean_fnb_currency_string(raw_fee)
-                        ),
+                        bank_fee=clean_fnb_currency_string(raw_fee),
                     )
                 )
 
     # parsed data validation #
     for balance_name, balance_info in balances_found.items():
-        assert all(
+        if not all(
             [
                 bal == balance_info["values_found"][0]
                 for bal in balance_info["values_found"]
             ]
-        ), f"Found conflicting values for {balance_name} balance: found values {';'.join([str(x) for x in balance_info['values_found']])}"
+        ):
+            raise PdfParsingException(
+                f"Found conflicting values for {balance_name} balance: found values {';'.join([str(x) for x in balance_info['values_found']])}"
+            )
 
     opening_balance: Decimal = balances_found["opening"]["values_found"][0]
     closing_balance: Decimal = balances_found["closing"]["values_found"][0]
+
+    sum_transactions: Decimal = sum(
+        [tcn.amount + tcn.bank_fee for tcn in transactions_found]
+    )
+    expected_closing_balance: Decimal = opening_balance + sum_transactions
+    if expected_closing_balance != closing_balance:
+        raise PdfParsingException(
+            f"Closing balance on statement ({closing_balance}) "
+            f"!= opening balance on statement ({opening_balance}) "
+            f"+ sum of parsed transactions ({sum_transactions}) "
+            f"= {expected_closing_balance}"
+        )
