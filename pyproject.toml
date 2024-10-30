@@ -1,14 +1,22 @@
 [project]
-name = "fnb-statement-parser"
+name = "pdf-bank-statement-parser"
 version = "0.1.0"
-description = " Tools for converting First National Bank (FNB) bank statement PDFs into useful structured data"
+description = "Command-line tool for converting PDF bank statements into CSV"
+authors = ["J-sephB-lt-n <joseph.jazz.bolton@gmail.com>"]
+license = "GPL-3.0"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-    "pdfplumber>=0.11.4",
-]
+dependencies = ["pdfplumber>=0.11.4"]
 
 [tool.uv]
-dev-dependencies = [
-    "ipython>=8.29.0",
-]
+dev-dependencies = ["ipython>=8.29.0"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project.urls]
+Homepage = "https://github.com/J-sephB-lt-n/pdf-bank-statement-parser"
+
+[project.scripts]
+pdf-bank-statement-parser = "pdf_bank_statement_parser.cli:parse_transactions"
