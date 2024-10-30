@@ -1,6 +1,7 @@
 """Utilities for cleaning dirty strings"""
 
 from decimal import Decimal
+from typing import Optional
 
 
 def clean_fnb_currency_string(raw_str: Optional[str]) -> Decimal:
@@ -16,7 +17,7 @@ def clean_fnb_currency_string(raw_str: Optional[str]) -> Decimal:
     if raw_str is None:
         return Decimal("0.00")
     clean_str = raw_str.replace(",", "").replace(" ", "")
-    if clean_str[-2:] == "Cr":
+    if "Cr" in clean_str:
         clean_str = clean_str.replace("Cr", "")
     else:
         clean_str = f"-{clean_str}"
