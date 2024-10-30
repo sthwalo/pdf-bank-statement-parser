@@ -129,7 +129,7 @@ with pdfplumber.open("bank_statements/FNB_ASPIRE_CURRENT_ACCOUNT_100.pdf") as pd
                     )
                 )
 
-    # parsed data validation #
+    # validate balances found #
     for balance_name, balance_info in balances_found.items():
         if not all(
             [
@@ -141,12 +141,19 @@ with pdfplumber.open("bank_statements/FNB_ASPIRE_CURRENT_ACCOUNT_100.pdf") as pd
                 f"Found conflicting values for {balance_name} balance: found values {';'.join([str(x) for x in balance_info['values_found']])}"
             )
 
+    # validate each transaction found (amount to balance relationship) #
     opening_balance: Decimal = balances_found["opening"]["values_found"][0]
     closing_balance: Decimal = balances_found["closing"]["values_found"][0]
 
-    sum_transactions: Decimal = sum(
-        [tcn.amount + tcn.bank_fee for tcn in transactions_found]
-    )
+    prev_balance: Decimal = opening_balance
+    for transaction in transactions_found:
+        if prev_balance + transaction.amount != transaction.balance:
+            raise PdfParsingException(
+                f"Parsing error: pre-transaction balance ({prev_balance}) + transaction amount ({transaction.amount}) != post-transaction balance for transaction \n{transaction.balance}"
+            )
+        prev_balance = transaction.balance
+
+    sum_transactions: Decimal = sum([tcn.amount for tcn in transactions_found])
     expected_closing_balance: Decimal = opening_balance + sum_transactions
     if expected_closing_balance != closing_balance:
         raise PdfParsingException(
