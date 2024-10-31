@@ -25,6 +25,7 @@ build-backend = "hatchling.build"
 
 [project.urls]
 homepage = "https://github.com/J-sephB-lt-n/pdf-bank-statement-parser"
+changelog = "https://github.com/J-sephB-lt-n/pdf-bank-statement-parser/blob/main/CHANGELOG.md"
 
 [project.scripts]
 parse-bank-statement-pdf = "pdf_bank_statement_parser.cli:parse_transactions"
