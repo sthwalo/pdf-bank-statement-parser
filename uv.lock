@@ -96,7 +96,7 @@ wheels = [
 [[package]]
 name = "pdf-bank-statement-parser"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "pypdfium2" },
 ]

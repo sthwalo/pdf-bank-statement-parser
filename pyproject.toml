@@ -2,20 +2,26 @@
 name = "pdf-bank-statement-parser"
 version = "0.1.0"
 description = "Command-line tool for converting PDF bank statements into CSV"
-authors = ["J-sephB-lt-n <joseph.jazz.bolton@gmail.com>"]
-license = "GPL-3.0"
+authors = [{ name = "Joseph Bolton", email = "joseph.jazz.bolton@gmail.com" }]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+  "Natural Language :: English",
+  "Topic :: File Formats",
+  "Topic :: Office/Business :: Financial :: Spreadsheet",
+  "Topic :: Text Processing",
+]
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-    "pypdfium2>=4.30.0",
-]
+dependencies = ["pypdfium2>=4.30.0"]
 
 [tool.uv]
 dev-dependencies = ["ipython>=8.29.0"]
 
-# [build-system]
-# requires = ["setuptools"]
-# build-backend = "setuptools.build_meta"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project.urls]
 homepage = "https://github.com/J-sephB-lt-n/pdf-bank-statement-parser"
