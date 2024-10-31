@@ -9,7 +9,9 @@ from pdf_bank_statement_parser.parse.extract_transactions import (
     extract_transactions_from_fnb_pdf_statement,
 )
 
-if __name__ == "__main__":
+
+def parse_transactions():
+    """The entrypoint of the CLI tool 'pdf-bank-statement-parser'"""
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument(
         "-f",
@@ -91,3 +93,7 @@ if __name__ == "__main__":
                 csv_sep_char=args.csv_sep_char,
                 verbose=(not args.quiet),
             )
+
+
+if __name__ == "__main__":
+    parse_transactions()
