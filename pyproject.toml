@@ -1,6 +1,6 @@
 [project]
 name = "pdf-bank-statement-parser"
-version = "0.1.0"
+version = "0.1.1"
 description = "Command-line tool for converting PDF bank statements into CSV"
 authors = [{ name = "Joseph Bolton", email = "joseph.jazz.bolton@gmail.com" }]
 classifiers = [
