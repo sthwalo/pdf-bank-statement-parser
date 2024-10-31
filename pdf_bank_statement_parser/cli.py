@@ -1,5 +1,6 @@
 import argparse
 import csv
+import json
 
 from pdf_bank_statement_parser.exceptions import OutputInvalidException
 from pdf_bank_statement_parser.objects import Transaction
@@ -22,14 +23,23 @@ if __name__ == "__main__":
     arg_parser.add_argument(
         "-o",
         "--output_path",
-        help="Path to which results will be written. If -f/--input_filepath was provided, this is interpreted as a path to a file, otherwise it is interpreted as a directory.",
-        required=True,
+        help=(
+            "Path to which results will be written."
+            "\nIf -f/--input_filepath was provided, this is interpreted as a path to a file, otherwise it is interpreted as a directory."
+            "\nIf this argument is omitted, it will default to same filename as input file (changing .pdf to .csv) or same output directory as input directory."
+        ),
     )
     arg_parser.add_argument(
         "-s",
         "--csv_sep_char",
         help="character used to separate fields in the CSV output\nIf this character appears within the output cells themselves, an error is raised",
         default=",",
+    )
+    arg_parser.add_argument(
+        "-q",
+        "--quiet",
+        help="Add this flag to disable verbose standard output",
+        action="store_true",
     )
     args = arg_parser.parse_args()
 
@@ -40,27 +50,41 @@ if __name__ == "__main__":
             "You must specify exactly one of -f/--input_filepath or -d/--input_dir"
         )
 
-    if args.input_filepath is not None:
-        transactions: list[Transaction] = extract_transactions_from_fnb_pdf_statement(
-            path_to_pdf_file=args.input_filepath
-        )
-        with open(args.output_path, "w", encoding="utf-8") as file:
-            csv_writer = csv.DictWriter(
-                file,
-                fieldnames=["date", "description", "amount", "balance", "bank_fee"],
-                delimiter=args.csv_sep_char,
-                quotechar='"',
-                quoting=csv.QUOTE_MINIMAL,
-            )
-            csv_writer.writeheader()
-            for transaction in transactions:
-                transaction_dict: dict = transaction._asdict()
-                for field_name, field_value in transaction_dict.items():
-                    if args.csv_sep_char in str(field_value):
-                        raise OutputInvalidException(
-                            f"Cannot produce valid output because found CSV-separator character '{args.csv_sep_char}' in field '{field_name}' of transaction {transaction_dict}"
-                        )
-                csv_writer.writerow(transaction_dict)
+    if args.output_path is None:
+        if args.input_filepath is not None:
+            args.output_path = args.input_filepath.replace(".pdf", ".csv")
+        else:
+            args.output_path = args.input_dir
 
-    if args.input_dir is not None:
-        print("TODO")
+    if not args.quiet:
+        print("VERBOSE mode is enabled (disable by adding the --quiet flag)")
+        print(
+            "input_arguments are:\n",
+            json.dumps(vars(args), indent=4),
+        )
+
+    # if args.input_filepath is not None:
+    #     transactions: list[Transaction] = extract_transactions_from_fnb_pdf_statement(
+    #         path_to_pdf_file=args.input_filepath
+    #     )
+    #     with open(args.output_path, "w", encoding="utf-8") as file:
+    #         csv_writer = csv.DictWriter(
+    #             file,
+    #             fieldnames=["date", "description", "amount", "balance", "bank_fee"],
+    #             delimiter=args.csv_sep_char,
+    #             quotechar='"',
+    #             quoting=csv.QUOTE_MINIMAL,
+    #         )
+    #         csv_writer.writeheader()
+    #         for transaction in transactions:
+    #             transaction_dict: dict = transaction._asdict()
+    #             for field_name, field_value in transaction_dict.items():
+    #                 if args.csv_sep_char in str(field_value):
+    #                     raise OutputInvalidException(
+    #                         f"Cannot produce valid output because found CSV-separator character '{args.csv_sep_char}' in field '{field_name}' of transaction {transaction_dict}"
+    #                     )
+    #             csv_writer.writerow(transaction_dict)
+    #
+    # if args.input_dir is not None:
+    #     input_dir
+    #     print("TODO")
