@@ -56,7 +56,7 @@ if __name__ == "__main__":
             for transaction in transactions:
                 transaction_dict: dict = transaction._asdict()
                 for field_name, field_value in transaction_dict.items():
-                    if args.csv_sep_char in field_value:
+                    if args.csv_sep_char in str(field_value):
                         raise OutputInvalidException(
                             f"Cannot produce valid output because found CSV-separator character '{args.csv_sep_char}' in field '{field_name}' of transaction {transaction_dict}"
                         )
