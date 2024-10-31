@@ -1,6 +1,7 @@
 import datetime
 import re
 from decimal import Decimal
+from pathlib import Path
 
 import pypdfium2 as pdfium
 
@@ -18,9 +19,12 @@ from pdf_bank_statement_parser.parse.output_validation import (
 
 
 def extract_transactions_from_fnb_pdf_statement(
-    path_to_pdf_file: str,
+    path_to_pdf_file: str | Path,
+    verbose: bool,
 ) -> list[Transaction]:
     """Reads in PDF bank statement and extracts all transactions from it"""
+    if verbose:
+        print("Started parsing file", path_to_pdf_file)
     transactions_found: list[Transaction] = []
     global_balances_found: dict[str, dict] = {
         "opening": {
@@ -34,7 +38,11 @@ def extract_transactions_from_fnb_pdf_statement(
     }
     try:
         pdf = pdfium.PdfDocument(path_to_pdf_file)
+        if verbose:
+            print(f"found {len(pdf):,} pages")
         for page_num, page in enumerate(pdf, start=1):
+            if verbose:
+                print(f"started page {page_num:,}")
             page_text: str = page.get_textpage().get_text_bounded()
             page.close()
             if page_num == 1:
@@ -44,13 +52,19 @@ def extract_transactions_from_fnb_pdf_statement(
                     page_text,
                 ).groups()
                 current_year = int(current_year_raw)
+                if verbose:
+                    print(f"starting year is {current_year}")
 
-            for balance_info in global_balances_found.values():
+            for balance_name, balance_info in global_balances_found.items():
                 found_balances: list[str] = re.findall(balance_info["regex"], page_text)
                 if found_balances:
                     for balance_raw in found_balances:
                         balance_info["values_found"].append(
                             clean_fnb_currency_string(balance_raw)
+                        )
+                    if verbose:
+                        print(
+                            f"found balances for {balance_name}: {balance_info['values_found']}"
                         )
             for row in page_text.split("\n"):
                 row_match = re.match(IDENTIFY_TRANSACTION_ROW_REGEX, row.strip())
@@ -81,14 +95,27 @@ def extract_transactions_from_fnb_pdf_statement(
                     )
     finally:
         pdf.close()
+        if verbose:
+            print("closed PDF")
 
     opening_balance: Decimal = global_balances_found["opening"]["values_found"][0]
     closing_balance: Decimal = global_balances_found["closing"]["values_found"][0]
 
-    validate_global_balances_found(global_balances_found)
-    validate_transactions_agree_with_balance_column(transactions_found, opening_balance)
-    validate_transactions_sum_to_closing_balance(
-        transactions_found, opening_balance, closing_balance
-    )
+    for validation_test, test_input_args in (
+        (validate_global_balances_found, (global_balances_found,)),
+        (
+            validate_transactions_agree_with_balance_column,
+            (transactions_found, opening_balance),
+        ),
+        (
+            validate_transactions_sum_to_closing_balance,
+            (transactions_found, opening_balance, closing_balance),
+        ),
+    ):
+        if verbose:
+            print("started test", validation_test.__name__)
+        validation_test(*test_input_args)
+        if verbose:
+            print("test passed: ", validation_test.__name__)
 
     return transactions_found

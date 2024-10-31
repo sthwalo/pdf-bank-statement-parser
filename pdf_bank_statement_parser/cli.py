@@ -1,8 +1,9 @@
 import argparse
-import csv
 import json
+from pathlib import Path
 
 from pdf_bank_statement_parser.exceptions import OutputInvalidException
+from pdf_bank_statement_parser.export import write_transactions_to_csv
 from pdf_bank_statement_parser.objects import Transaction
 from pdf_bank_statement_parser.parse.extract_transactions import (
     extract_transactions_from_fnb_pdf_statement,
@@ -63,28 +64,29 @@ if __name__ == "__main__":
             json.dumps(vars(args), indent=4),
         )
 
-    # if args.input_filepath is not None:
-    #     transactions: list[Transaction] = extract_transactions_from_fnb_pdf_statement(
-    #         path_to_pdf_file=args.input_filepath
-    #     )
-    #     with open(args.output_path, "w", encoding="utf-8") as file:
-    #         csv_writer = csv.DictWriter(
-    #             file,
-    #             fieldnames=["date", "description", "amount", "balance", "bank_fee"],
-    #             delimiter=args.csv_sep_char,
-    #             quotechar='"',
-    #             quoting=csv.QUOTE_MINIMAL,
-    #         )
-    #         csv_writer.writeheader()
-    #         for transaction in transactions:
-    #             transaction_dict: dict = transaction._asdict()
-    #             for field_name, field_value in transaction_dict.items():
-    #                 if args.csv_sep_char in str(field_value):
-    #                     raise OutputInvalidException(
-    #                         f"Cannot produce valid output because found CSV-separator character '{args.csv_sep_char}' in field '{field_name}' of transaction {transaction_dict}"
-    #                     )
-    #             csv_writer.writerow(transaction_dict)
-    #
-    # if args.input_dir is not None:
-    #     input_dir
-    #     print("TODO")
+    if args.input_filepath is not None:
+        transactions: list[Transaction] = extract_transactions_from_fnb_pdf_statement(
+            path_to_pdf_file=args.input_filepath,
+            verbose=(not args.quiet),
+        )
+        write_transactions_to_csv(
+            transactions=transactions,
+            output_filepath=args.output_path,
+            csv_sep_char=args.csv_sep_char,
+            verbose=(not args.quiet),
+        )
+
+    if args.input_dir is not None:
+        for input_filepath in Path(args.input_dir).glob("*.pdf"):
+            transactions: list[Transaction] = (
+                extract_transactions_from_fnb_pdf_statement(
+                    path_to_pdf_file=input_filepath,
+                    verbose=(not args.quiet),
+                )
+            )
+            write_transactions_to_csv(
+                transactions=transactions,
+                output_filepath=args.output_path / input_filepath.with_suffix(".csv"),
+                csv_sep_char=args.csv_sep_char,
+                verbose=(not args.quiet),
+            )
