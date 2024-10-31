@@ -2,7 +2,7 @@
 
 from decimal import Decimal
 
-from pdf_bank_statement_parser.exceptions import PdfParsingException
+from pdf_bank_statement_parser.exceptions import ValidationTestFailedException
 from pdf_bank_statement_parser.objects import Transaction
 
 
@@ -19,7 +19,7 @@ def validate_global_balances_found(global_balances_found: dict[str, dict]) -> No
                 for bal in balance_info["values_found"]
             ]
         ):
-            raise PdfParsingException(
+            raise ValidationTestFailedException(
                 f"Found conflicting values for {balance_name} balance: found values {';'.join([str(x) for x in balance_info['values_found']])}"
             )
 
@@ -35,7 +35,7 @@ def validate_transactions_agree_with_balance_column(
     prev_balance: Decimal = opening_balance
     for transaction in transactions:
         if prev_balance + transaction.amount != transaction.balance:
-            raise PdfParsingException(
+            raise ValidationTestFailedException(
                 f"Parsing error: pre-transaction balance ({prev_balance}) + transaction amount ({transaction.amount}) != post-transaction balance for transaction \n{transaction.balance}"
             )
         prev_balance = transaction.balance
@@ -51,7 +51,7 @@ def validate_transactions_sum_to_closing_balance(
     sum_transactions: Decimal = sum([tcn.amount for tcn in transactions])
     expected_closing_balance: Decimal = opening_balance + sum_transactions
     if expected_closing_balance != closing_balance:
-        raise PdfParsingException(
+        raise ValidationTestFailedException(
             f"Closing balance on statement ({closing_balance}) "
             f"!= opening balance on statement ({opening_balance}) "
             f"+ sum of parsed transactions ({sum_transactions}) "
