@@ -28,14 +28,14 @@ def parse_transactions():
         "--output_path",
         help=(
             "Path to which results will be written."
-            "\nIf -f/--input_filepath was provided, this is interpreted as a path to a file, otherwise it is interpreted as a directory."
-            "\nIf this argument is omitted, it will default to same filename as input file (changing .pdf to .csv) or same output directory as input directory."
+            " If -f/--input_filepath was provided, --output_path is interpreted as a path to a file, otherwise --output_path is interpreted as a directory."
+            " If this argument is omitted, it will default to same filename as input file (changing .pdf to .csv) or same output directory as input directory."
         ),
     )
     arg_parser.add_argument(
         "-s",
         "--csv_sep_char",
-        help="character used to separate fields in the CSV output\nIf this character appears within the output cells themselves, an error is raised",
+        help="Character used to separate fields in the CSV output. If this character appears within the output cells themselves, an error is raised",
         default=",",
     )
     arg_parser.add_argument(
