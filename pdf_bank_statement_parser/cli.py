@@ -86,7 +86,8 @@ if __name__ == "__main__":
             )
             write_transactions_to_csv(
                 transactions=transactions,
-                output_filepath=args.output_path / input_filepath.with_suffix(".csv"),
+                output_filepath=Path(args.output_path)
+                / input_filepath.with_suffix(".csv").name,
                 csv_sep_char=args.csv_sep_char,
                 verbose=(not args.quiet),
             )
