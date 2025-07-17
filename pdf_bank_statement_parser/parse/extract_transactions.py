@@ -21,8 +21,17 @@ from pdf_bank_statement_parser.parse.output_validation import (
 def extract_transactions_from_fnb_pdf_statement(
     path_to_pdf_file: str | Path,
     verbose: bool,
+    debug: bool = False,
+    lenient_validation: bool = False,
 ) -> list[Transaction]:
-    """Reads in PDF bank statement and extracts all transactions from it"""
+    """Reads in PDF bank statement and extracts all transactions from it
+    
+    Args:
+        path_to_pdf_file: Path to the PDF file
+        verbose: Whether to print verbose output
+        debug: Whether to print debug information for each transaction
+        lenient_validation: Whether to allow small discrepancies in balance calculations
+    """
     if verbose:
         print("Started parsing file", path_to_pdf_file)
     transactions_found: list[Transaction] = []
@@ -67,11 +76,19 @@ def extract_transactions_from_fnb_pdf_statement(
                             f"found balances for {balance_name}: {balance_info['values_found']}"
                         )
             for row in page_text.split("\n"):
+                if debug:
+                    print(f"DEBUG - Processing row: {row}")
+                
                 row_match = re.match(IDENTIFY_TRANSACTION_ROW_REGEX, row.strip())
                 if row_match:
                     raw_day, raw_month, raw_desc, raw_amt, raw_balance, raw_fee = (
                         row_match.groups()
                     )
+                    
+                    if debug:
+                        print(f"DEBUG - Match found: day={raw_day}, month={raw_month}, desc={raw_desc}")
+                        print(f"DEBUG - Amounts: amount={raw_amt}, balance={raw_balance}, fee={raw_fee}")
+                    
                     month: str = raw_month.strip()
                     if MONTH_NAMES.index(month) < MONTH_NAMES.index(current_month):
                         # if we go to a previous month, then we assume that we have crossed into a new year #
@@ -82,15 +99,23 @@ def extract_transactions_from_fnb_pdf_statement(
                         if raw_desc.strip() == ""
                         else raw_desc.strip()
                     )
+                    
+                    amount = clean_fnb_currency_string(raw_amt)
+                    balance = clean_fnb_currency_string(raw_balance)
+                    bank_fee = clean_fnb_currency_string(raw_fee)
+                    
+                    if debug:
+                        print(f"DEBUG - Cleaned values: amount={amount}, balance={balance}, fee={bank_fee}")
+                    
                     transactions_found.append(
                         Transaction(
                             date=datetime.date(
                                 current_year, MONTH_NAMES.index(month) + 1, int(raw_day)
                             ),
                             description=transaction_desc,
-                            amount=clean_fnb_currency_string(raw_amt),
-                            balance=clean_fnb_currency_string(raw_balance),
-                            bank_fee=clean_fnb_currency_string(raw_fee),
+                            amount=amount,
+                            balance=balance,
+                            bank_fee=bank_fee,
                         )
                     )
     finally:
@@ -105,11 +130,11 @@ def extract_transactions_from_fnb_pdf_statement(
         (validate_global_balances_found, (global_balances_found,)),
         (
             validate_transactions_agree_with_balance_column,
-            (transactions_found, opening_balance),
+            (transactions_found, opening_balance, lenient_validation),
         ),
         (
             validate_transactions_sum_to_closing_balance,
-            (transactions_found, opening_balance, closing_balance),
+            (transactions_found, opening_balance, closing_balance, lenient_validation),
         ),
     ):
         if verbose:

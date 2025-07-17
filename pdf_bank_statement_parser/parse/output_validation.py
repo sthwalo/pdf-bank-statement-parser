@@ -25,19 +25,40 @@ def validate_global_balances_found(global_balances_found: dict[str, dict]) -> No
 
 
 def validate_transactions_agree_with_balance_column(
-    transactions: list[Transaction], opening_balance: Decimal
+    transactions: list[Transaction], opening_balance: Decimal, lenient_validation: bool = False
 ) -> None:
     """For each transaction in `transactions`, checks
     that the value in the balance column is equal to the sum of the transaction
     amount and the previous balance value.
     If a single mismatch is found, an exception is raised.
+    
+    Args:
+        transactions: List of transactions to validate
+        opening_balance: Opening balance from the statement
+        lenient_validation: If True, allows small discrepancies (up to 30 units) in balance calculations
     """
     prev_balance: Decimal = opening_balance
     for transaction in transactions:
-        if prev_balance + transaction.amount != transaction.balance:
-            raise ValidationTestFailedException(
-                f"Parsing error: pre-transaction balance ({prev_balance}) + transaction amount ({transaction.amount}) != post-transaction balance for transaction \n{transaction.balance}"
-            )
+        expected_balance = prev_balance + transaction.amount + transaction.bank_fee
+        
+        # Check if balances match, with lenient option for small discrepancies
+        if expected_balance != transaction.balance:
+            discrepancy = abs(expected_balance - transaction.balance)
+            
+            if lenient_validation and discrepancy <= Decimal('30.00'):
+                # In lenient mode, log the discrepancy but continue
+                print(f"WARNING: Balance discrepancy of {discrepancy} detected but ignored in lenient mode.")
+                print(f"  Transaction: {transaction}")
+                print(f"  Expected balance: {expected_balance}, Actual balance: {transaction.balance}")
+            else:
+                raise ValidationTestFailedException(
+                    f"Parsing error: pre-transaction balance ({prev_balance}) + "
+                    f"transaction amount ({transaction.amount}) + "
+                    f"bank fee ({transaction.bank_fee}) != "
+                    f"post-transaction balance ({transaction.balance}) for transaction\n"
+                    f"Date: {transaction.date}, Description: {transaction.description}\n"
+                    f"Discrepancy: {discrepancy}"
+                )
         prev_balance = transaction.balance
 
 
@@ -45,15 +66,34 @@ def validate_transactions_sum_to_closing_balance(
     transactions: list[Transaction],
     opening_balance: Decimal,
     closing_balance: Decimal,
+    lenient_validation: bool = False,
 ) -> None:
     """Checks that statement opening balance plus sum of transaction amounts is equal to
-    statement closing balance, otherwise raising an exception"""
+    statement closing balance, otherwise raising an exception
+    
+    Args:
+        transactions: List of transactions to validate
+        opening_balance: Opening balance from the statement
+        closing_balance: Closing balance from the statement
+        lenient_validation: If True, allows small discrepancies (up to 30 units) in balance calculations
+    """
     sum_transactions: Decimal = sum([tcn.amount for tcn in transactions])
-    expected_closing_balance: Decimal = opening_balance + sum_transactions
+    sum_fees: Decimal = sum([tcn.bank_fee for tcn in transactions])
+    expected_closing_balance: Decimal = opening_balance + sum_transactions + sum_fees
+    
     if expected_closing_balance != closing_balance:
-        raise ValidationTestFailedException(
-            f"Closing balance on statement ({closing_balance}) "
-            f"!= opening balance on statement ({opening_balance}) "
-            f"+ sum of parsed transactions ({sum_transactions}) "
-            f"= {expected_closing_balance}"
-        )
+        discrepancy = abs(expected_closing_balance - closing_balance)
+        
+        if lenient_validation and discrepancy <= Decimal('30.00'):
+            # In lenient mode, log the discrepancy but continue
+            print(f"WARNING: Closing balance discrepancy of {discrepancy} detected but ignored in lenient mode.")
+            print(f"  Expected closing balance: {expected_closing_balance}, Actual closing balance: {closing_balance}")
+        else:
+            raise ValidationTestFailedException(
+                f"Closing balance on statement ({closing_balance}) "
+                f"!= opening balance on statement ({opening_balance}) "
+                f"+ sum of parsed transactions ({sum_transactions}) "
+                f"+ sum of bank fees ({sum_fees}) "
+                f"= {expected_closing_balance}\n"
+                f"Discrepancy: {discrepancy}"
+            )

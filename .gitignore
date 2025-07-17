@@ -137,6 +137,17 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
+# Bank statements
+cashbook/
+data/
+input/
+output/
+reports/
+
+# Commands
+commands.md
+
+
 # mkdocs documentation
 /site
 
