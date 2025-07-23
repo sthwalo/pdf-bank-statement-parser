@@ -108,7 +108,8 @@ def categorize_transactions(df):
             'Manual Reversal Fee', 'Unsuccessful F Declined', 'Unpaid No Funds',
             'Fee Tcib', 'Swift Commission', 'Replacement Fee', 'Card Fee',
             'Commission', 'Schd Trxn', 'Unpaid No Funds 01', 'Dr.Int.Rate',
-            '!ERROR: unparsable description text!', 'Card POS Unsuccessful F Declined'
+            '!ERROR: unparsable description text!', 'Card POS Unsuccessful F Declined',
+            'Bank Charges'
         ],
         
         # Transportation
@@ -133,13 +134,16 @@ def categorize_transactions(df):
         
         # Office Expenses
         'Stationery and Printing': [
-            'Game', 'Cenecon', 'Stationery', 'Office', 'Printing', 'Paper', 'POS Purchase Game'
+            'Game', 'Cenecon', 'Stationery', 'Office', 'Printing', 'Paper', 'POS Purchase Game',
+            'Stationery', 'Printer Cartridges', 'Ink for Printers'
         ],
         'Telephone Expense': [
-            'Airtime', 'Topup', 'Telkom', 'Vodacom', 'MTN', 'Cell C'
+            'Airtime', 'Topup', 'Telkom', 'Vodacom', 'MTN', 'Cell C',
+            'Telephone & Utilities'
         ],
         'Internet Expense': [
-            'Wifi', 'Internet', 'Home Wifi', 'Fibre'
+            'Wifi', 'Internet', 'Home Wifi', 'Fibre',
+            'Internet ADSL & Hosting'
         ],
         'Business Equipment': [
             'Verimark', 'African Electro', 'Incredible', 'Hpy*', 
@@ -149,7 +153,8 @@ def categorize_transactions(df):
         # Personnel Expenses
         'Salaries and Wages': [
             'Driver', 'Salary', 'Tendai', 'Bonakele', 'Ncube', 'Ze', 'Send Money',
-            'Salaries', 'Wages', 'Payroll', 'Staff Payment', 'Employee Payment','Settlement'
+            'Salaries', 'Wages', 'Payroll', 'Staff Payment', 'Employee Payment','Settlement',
+            'Salaries & Wages'
         ],
         'Director Remunerations': [
              'FNB App Payment To Lk', 'FNB App Payment To Lucky', 'FNB App Payment To Gu', 'FNB App Payment To Gr', 'FNB App Payment To G', 'FNB App Rtc Pmt To Lucky','FNB App Rtc Pmt To Lucky Nhlanhla','FNB App Rtc Pmt To Aunty Lucky','FNB App Rtc Pmt To Qiniso Nsele Lucky','FNB App Rtc Pmt To Lucky Mav Logistics','FNB App Payment To Luc Lucky','FNB App Rtc Pmt To Lucky Lucky Allowance'
@@ -159,10 +164,12 @@ def categorize_transactions(df):
         'Business Meetings': [
             'Nandos', 'Mcd', 'KFC', 'Chicken Licken', 'Tres Jolie', 'MCP', 'Lunch',
             'Steers', 'Galitos', 'Nizams', 'Newscafe', 'Tonys Ca', 'Snack Shop',
-            'Rocky Liquor', 'Avianto'
+            'Rocky Liquor', 'Avianto',
+            'Refreshments / Entertainment expences'
         ],
         'Outsourced Services': [
             'Transport', 'Masik', 'Luc Trs', 'Mas', 'Samantha Mas Logistics', 'Lucky Nikelo Logistics','FNB App Payment To Lucky Nikelo Logistics',
+            'Outsourced Services'
         ],
         'Supplier Payments': [
             'Makhosin', 'Masikize', 'Supplier', 'Vendor'
@@ -203,17 +210,20 @@ def categorize_transactions(df):
         
         # Other Expenses
         'Educational Expenses': [
-            'Sch Fees', 'School', 'Education', 'Computer Lessons', 'Extra Lessons',
-            'Simphiwe', 'Pathfinder', 'Kids For Kids', 'School Fees', 'School Transport', 'School Uniform'
+            'Sch Fees', 'School', 'Education', 'Computer Lessons', 'Extra Lessons', 'AmandaS Schoolfees',
+            'Simphiwe', 'Pathfinder', 'Kids For Kids', 'School Fees', 'School Transport', 'School Uniform',
+            'Educational Aids', 'Learner Support Material', 'Education and Training (Staff)'
         ],
         'Donations': [
-            'Father\'S Day', 'Penlope Mail', 'Funeral', 'Donation'
+            'Father\'S Day', 'Penlope Mail', 'Funeral', 'Donation',
+            'Donations / Gifts'
         ],
         'Investment Expense': [
             'Invest', 'Investment', 'Shares'
         ],
         'Electricity': [
-            'Electricity Prepaid', 'Eskom'
+            'Electricity Prepaid', 'Eskom',
+            'Electricity'
         ],
         
         # ASSET/LIABILITY CATEGORIES
@@ -238,7 +248,55 @@ def categorize_transactions(df):
             '4624616', 'Payment To Msu', 'Payment To Ndu',
             'S2S*Salamudestasupe', 'Steers Balfour',
             'POS Purchase S2S*Salamudestasupe 428104*2012 03 Sep','FNB App Transfer To N'
-        ]
+        ],
+        
+        # Additional new categories
+        'Service Contracts': [
+            'Service contract Copiers'
+        ],
+        'Professional Fees': [
+            'Audit Fees', 'Accounting Services', 'Legal Fees'
+        ],
+        'Software Expenses': [
+            'Computer Software and Licences'
+        ],
+        'Security Expenses': [
+            'Security - Buildings/ Grounds'
+        ],
+        'Maintenance Expenses': [
+            'Maintenance - Assets and Equiptment', 'Maintenance - Buildings',
+            'Maintenance - Sport Facilities', 'Maintenance - Grounds'
+        ],
+        'Equipment': [
+            'Tools / Equiptment', 'Protective Clothing'
+        ],
+        'Cleaning': [
+            'Cleaning aids', 'Cleaning Material'
+        ],
+        'Affiliations': [
+            'Affiliations', 'Badges'
+        ],
+        'Concert Expenses': [
+            'Concert Facilitated', 'Concert Presented'
+        ],
+        'Compliance Fees': [
+            'Compliance Fees (COIDA)'
+        ],
+        'Sporting Activities': [
+            'Sporting Activities'
+        ],
+        'Trust Expenses': [
+            'Trust Expenses'
+        ],
+        'Transportation Expenses': [
+            'Fuel & Other Transport costs'
+        ],
+        'Rent': [
+            'Rent'
+        ],
+        'Excursions': [
+            'Excursions'
+        ],
     }
 
     # Add Account column with default value
@@ -295,6 +353,21 @@ def categorize_transactions(df):
         'Donations': 'Expense',
         'Investment Expense': 'Expense',
         'Electricity': 'Expense',
+        'Service Contracts': 'Expense',
+        'Professional Fees': 'Expense',
+        'Software Expenses': 'Expense',
+        'Security Expenses': 'Expense',
+        'Maintenance Expenses': 'Expense',
+        'Equipment': 'Expense',
+        'Cleaning': 'Expense',
+        'Affiliations': 'Expense',
+        'Concert Expenses': 'Expense',
+        'Compliance Fees': 'Expense',
+        'Sporting Activities': 'Expense',
+        'Trust Expenses': 'Expense',
+        'Transportation Expenses': 'Expense',
+        'Rent': 'Expense',
+        'Excursions': 'Expense',
 
         # Assets/Liabilities/Equity
         'Assets': 'Asset',
@@ -431,7 +504,7 @@ if __name__ == "__main__":
     end_date = '2024-02-28'
     
     # Get the input and output paths
-    input_dir = '/Users/sthwalonyoni/pdf-bank-statement-parser/output'
+    input_dir = '/Users/sthwalonyoni/pdf-bank-statement-parser/data/input/2024'
     output_path = os.path.join(os.path.dirname(input_dir), "Annual_Cashbook_2024.xlsx")
     
     try:

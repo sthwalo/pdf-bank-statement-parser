@@ -47,7 +47,7 @@ class ExcelDataExtractor:
 def main():
     try:
         # Initialize extractor
-        excel_path = "input/Annual Financial Statements -2014.xls"
+        excel_path = "/Users/sthwalonyoni/pdf-bank-statement-parser/Annual_Cashbook_2023.xlsx"
         extractor = ExcelDataExtractor(excel_path)
         
         # Read all sheets

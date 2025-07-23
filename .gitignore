@@ -142,10 +142,13 @@ cashbook/
 data/
 input/
 output/
+debug/
+reconciliation_reports/
 reports/
 
 # Commands
 commands.md
+work.md
 
 
 # mkdocs documentation
