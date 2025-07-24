@@ -328,11 +328,27 @@ def generate_cashbook():
         logger.error(f"Error generating cashbook: {str(e)}")
         return False
 
+def determine_output_dir(input_dir: Path) -> Path:
+    """Determine output directory based on input directory structure."""
+    # Extract company name from path (e.g., 'ghc' from 'data/input/2025/ghc')
+    company_name = input_dir.name.lower()
+    
+    # Construct output path (data/output/company_name)
+    output_dir = Path("data/output") / company_name
+    
+    # Create output directory if it doesn't exist
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    return output_dir
+
 def main():
     """Main function."""
-    input_dir = Path("data/input/2024")
+    input_dir = Path("data/input/2025/ghc")
+    output_dir = determine_output_dir(input_dir)
     
     logger.info("Starting CUSTOM FNB Parser workflow...")
+    logger.info(f"Input directory: {input_dir}")
+    logger.info(f"Output directory: {output_dir}")
     
     # Convert PDFs using custom parser
     logger.info("Step 1: Converting PDFs with custom parser...")
